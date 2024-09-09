@@ -1,4 +1,7 @@
-org: fekarlstad23 ##CHANGE TO YOUR ORG
+custom:
+  localEnv: ${file(./local.yml)}
+
+org: ${self:custom.localEnv.myOrg}
 app: bonzai
 service: awsbonzai
 
@@ -8,12 +11,71 @@ provider:
   region: eu-north-1
   deploymentMethod: direct
   iam:
-    role: arn:aws:iam::597088039276:role/LambdaDynamoDBRole  ##CHANGE TO YOUR ROLE
+    role: ${self:custom.localEnv.myLambdaArn}
 
 functions:
-  hello:
-    handler: handler.hello
+  getRooms:
+    handler: functions/getRooms/index.handler
     events:
       - httpApi:
-          path: /
+          path: /rooms
           method: get
+  bookRoom:
+    handler: functions/bookRoom/index.handler
+    events:
+      - httpApi:
+          path: /rooms
+          method: post
+  getOrder:
+    handler: functions/getOrder/index.handler
+    events:
+      - httpApi:
+          path: /orders/{id}
+          method: get 
+  getOrders:
+    handler: functions/getOrders/index.handler
+    events:
+      - httpApi:
+          path: /orders/admin
+          method: get     
+  cancelOrder:
+    handler: functions/cancelOrder/index.handler
+    events:
+      - httpApi:
+          path: /orders/{id}
+          method: delete
+  changeOrder:
+    handler: functions/changeOrder/index.handler
+    events:
+      - httpApi:
+          path: /orders/{id}
+          method: put
+
+resources:
+  Resources:
+    RoomsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: 'rooms-db'
+        AttributeDefinitions:
+          - AttributeName: 'pk'
+            AttributeType: 'S'
+          - AttributeName: 'sk'
+            AttributeType: 'S'
+        KeySchema:
+          - AttributeName: 'pk'
+            KeyType: 'HASH'
+          - AttributeName: 'sk'
+            KeyType: 'RANGE'
+        BillingMode: PAY_PER_REQUEST
+    RoomordersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: 'roomorders-db'
+        AttributeDefinitions:
+          - AttributeName: 'pk'
+            AttributeType: 'S'
+        KeySchema:
+          - AttributeName: 'pk'
+            KeyType: 'HASH'
+        BillingMode: PAY_PER_REQUEST
