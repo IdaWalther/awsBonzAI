@@ -5,12 +5,12 @@ exports.handler = async (event) => {
     try {
         const { Items } = await db.scan({
             TableName: 'rooms-db',
-            //   FilterExpression: 'attribute_exists(#DYNOBASE_event)',
-            //   ExpressionAttributeNames: {
-            //     '#DYNOBASE_event': 'artist'
-            //   }
+            FilterExpression: 'available = :available',
+            ExpressionAttributeValues: {
+                ':available': true
+            }
         });
-        if (Items) {
+        if (Items && Items.length > 0) {
             return sendResponse(200, Items);
         } else {
             return sendError(404, { success: false, message: 'no rooms found!' })

@@ -50,12 +50,6 @@ functions:
       - httpApi:
           path: /orders/{id}
           method: put
-  postRoom:
-    handler: functions/postRoom/index.handler
-    events:
-      - httpApi:
-          path: /room
-          method: post
 
 resources:
   Resources:
