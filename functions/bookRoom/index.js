@@ -6,12 +6,18 @@ const { calculateBookingPrice } = require("../../utils/calculatePrice");
 
 exports.handler = async (event) => {
   try {
-    // Parse the request body
-    const { bookings } = JSON.parse(event.body);
+    // Parse the request body and check for invalid fields
+    const { bookings, name, email } = JSON.parse(event.body);
 
     if (!Array.isArray(bookings) || bookings.length === 0) {
       return sendError(400, {
         error: 'Invalid request body. "bookings" must be a non-empty array.',
+      });
+    }
+
+    if (!name || !email) {
+      return sendError(400, {
+        error: "Name and email are required at the order level.",
       });
     }
 
@@ -21,8 +27,6 @@ exports.handler = async (event) => {
       "numberOfGuests",
       "checkInDate",
       "checkOutDate",
-      "name",
-      "email",
     ];
 
     for (const booking of bookings) {
@@ -43,30 +47,30 @@ exports.handler = async (event) => {
       }
     }
 
+    // Generate a unique ID for the entire order
+    const orderId = uuidv4();
+
     // Booking logic
     let totalPrice = 0;
-    const bookingResults = []; // To store each booking's result with the generated ID
+    const bookingDetails = []; // To store details of each booking
 
     for (const booking of bookings) {
       const { roomType, numberOfGuests, checkInDate, checkOutDate } = booking;
 
-      // Generate a unique ID for this booking
-      const bookingId = uuidv4();
-
       // Query the rooms for the specified room type
       const queryParams = {
-        TableName: "rooms-db", // Replace with your table name
+        TableName: "rooms-db",
         KeyConditionExpression: "pk = :pk",
         FilterExpression: "available = :available",
         ExpressionAttributeValues: {
-          ":pk": roomType, // No need to use { S: roomType } because `db` handles it
+          ":pk": roomType,
           ":available": true,
         },
       };
 
       try {
         const { Items } = await db.query(queryParams);
-        const availableRooms = Items; // Directly using Items since db auto-converts
+        const availableRooms = Items;
 
         if (!Array.isArray(availableRooms) || availableRooms.length === 0) {
           return sendError(400, {
@@ -94,10 +98,12 @@ exports.handler = async (event) => {
         );
         totalPrice += bookingPrice;
 
-        // Store the booking result with the generated ID
-        bookingResults.push({
-          bookingId,
-          ...booking,
+        // Add booking details to the array without name and email
+        bookingDetails.push({
+          roomType,
+          numberOfGuests,
+          checkInDate,
+          checkOutDate,
           totalPrice: bookingPrice,
         });
       } catch (error) {
@@ -106,11 +112,32 @@ exports.handler = async (event) => {
       }
     }
 
-    // Respond with success message, total price, and generated IDs
+    // Store the entire order in the roomorders-db table
+    const orderParams = {
+      TableName: "roomorders-db",
+      Item: {
+        pk: orderId, // Use orderId as the primary key
+        totalPrice,
+        bookings: bookingDetails, // Store the details of each booking
+        name, // Store name at the order level
+        email, // Store email at the order level
+        createdAt: new Date().toISOString(), // Optional: store creation timestamp
+      },
+    };
+
+    try {
+      await db.put(orderParams);
+    } catch (error) {
+      console.error("Error storing order in roomorders-db:", error);
+      return sendError(500, { message: "Internal server error" });
+    }
+
+    // Respond with success message and order details
     return sendResponse(200, {
       message: "Rooms booked successfully",
+      orderId, // Include the order ID
       totalPrice,
-      bookings: bookingResults, // Include booking details with generated IDs
+      bookings: bookingDetails, // Include booking details
     });
   } catch (error) {
     console.error("Error booking rooms:", error);
