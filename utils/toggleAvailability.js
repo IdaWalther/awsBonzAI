@@ -18,7 +18,7 @@ const toggleAvailability = async (pk, sk, available) => {
     ExpressionAttributeValues: {
       ":available": available,
     },
-    ReturnValues: "UPDATED_NEW", // Optional: returns the updated attributes
+    ReturnValues: "UPDATED_NEW",
   };
 
   try {
