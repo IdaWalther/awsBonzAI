@@ -108,20 +108,14 @@ exports.handler = async (event) => {
           checkOutDate,
           totalPrice: bookingPrice,
         });
-        // Add room details to be updated
-        roomsToUpdate.push({ pk: room.pk, sk: room.sk });
+
+        // Call the toggleAvailability function to set the room to unavailable
+        await toggleAvailability(room.pk, room.sk, false); // Toggling availability to false
       } catch (error) {
         console.error("Error querying room availability:", error);
         return sendError(500, { message: "Internal server error" });
       }
     }
-
-    // Toggle availability for all rooms
-    await Promise.all(
-      roomsToUpdate.map(
-        ({ pk, sk }) => toggleAvailability(pk, sk, false) // Mark rooms as unavailable
-      )
-    );
 
     // Store the entire order in the roomorders-db table
     const orderParams = {
