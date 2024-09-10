@@ -3,6 +3,7 @@ const { sendResponse, sendError } = require("../../responses/index");
 const { v4: uuidv4 } = require("uuid"); // Importing UUID
 const { validateNumberOfGuests } = require("../../utils/checkGuests");
 const { calculateBookingPrice } = require("../../utils/calculatePrice");
+const { toggleAvailability } = require("../../utils/toggleAvailability");
 
 exports.handler = async (event) => {
   try {
@@ -53,6 +54,7 @@ exports.handler = async (event) => {
     // Booking logic
     let totalPrice = 0;
     const bookingDetails = []; // To store details of each booking
+    const roomsToUpdate = []; // To store the rooms to be updated
 
     for (const booking of bookings) {
       const { roomType, numberOfGuests, checkInDate, checkOutDate } = booking;
@@ -106,11 +108,20 @@ exports.handler = async (event) => {
           checkOutDate,
           totalPrice: bookingPrice,
         });
+        // Add room details to be updated
+        roomsToUpdate.push({ pk: room.pk, sk: room.sk });
       } catch (error) {
         console.error("Error querying room availability:", error);
         return sendError(500, { message: "Internal server error" });
       }
     }
+
+    // Toggle availability for all rooms
+    await Promise.all(
+      roomsToUpdate.map(
+        ({ pk, sk }) => toggleAvailability(pk, sk, false) // Mark rooms as unavailable
+      )
+    );
 
     // Store the entire order in the roomorders-db table
     const orderParams = {
