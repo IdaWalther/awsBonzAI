@@ -14,5 +14,3 @@ exports.handler = async (event) => {
         return sendError(404, {message: error.message});
     }
 };
-
-
