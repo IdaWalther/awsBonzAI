@@ -102,6 +102,7 @@ exports.handler = async (event) => {
 
         // Add booking details to the array without name and email
         bookingDetails.push({
+          roomId: room.sk,
           roomType,
           numberOfGuests,
           checkInDate,
