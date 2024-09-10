@@ -20,12 +20,6 @@ functions:
       - httpApi:
           path: /rooms
           method: get
-  addRoom:
-    handler: functions/addRoom/index.handler
-    events:
-      - httpApi:
-          path: /rooms/add
-          method: post        
   bookRoom:
     handler: functions/bookRoom/index.handler
     events:
