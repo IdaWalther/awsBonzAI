@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require("uuid"); // Importing UUID
 const { validateNumberOfGuests } = require("../../utils/checkGuests");
 const { calculateBookingPrice } = require("../../utils/calculatePrice");
 const { toggleAvailability } = require("../../utils/toggleAvailability");
+const { findAvailableRoom } = require("../../utils/findRoom"); // Import the utility function
 
 exports.handler = async (event) => {
   try {
@@ -54,68 +55,42 @@ exports.handler = async (event) => {
     // Booking logic
     let totalPrice = 0;
     const bookingDetails = []; // To store details of each booking
-    const roomsToUpdate = []; // To store the rooms to be updated
 
     for (const booking of bookings) {
       const { roomType, numberOfGuests, checkInDate, checkOutDate } = booking;
 
-      // Query the rooms for the specified room type
-      const queryParams = {
-        TableName: "rooms-db",
-        KeyConditionExpression: "pk = :pk",
-        FilterExpression: "available = :available",
-        ExpressionAttributeValues: {
-          ":pk": roomType,
-          ":available": true,
-        },
-      };
+      // Use the utility function to find the room
+      const room = await findAvailableRoom(roomType);
 
-      try {
-        const { Items } = await db.query(queryParams);
-        const availableRooms = Items;
-
-        if (!Array.isArray(availableRooms) || availableRooms.length === 0) {
-          return sendError(400, {
-            error: `Room type ${roomType} is not available at the moment.`,
-          });
-        }
-
-        // Find the first available room of the specified type
-        const room = availableRooms[0];
-
-        // Use the utility function to validate number of guests for each room
-        const guestValidationError = validateNumberOfGuests(
-          room.pk,
-          numberOfGuests
-        );
-        if (guestValidationError) {
-          return sendError(400, guestValidationError);
-        }
-
-        // Use the utility function to calculate booking price
-        const bookingPrice = calculateBookingPrice(
-          room.price,
-          checkInDate,
-          checkOutDate
-        );
-        totalPrice += bookingPrice;
-
-        // Add booking details to the array without name and email
-        bookingDetails.push({
-          roomId: room.sk,
-          roomType,
-          numberOfGuests,
-          checkInDate,
-          checkOutDate,
-          totalPrice: bookingPrice,
-        });
-
-        // Call the toggleAvailability function to set the room to unavailable
-        await toggleAvailability(room.pk, room.sk, false); // Toggling availability to false
-      } catch (error) {
-        console.error("Error querying room availability:", error);
-        return sendError(500, { message: "Internal server error" });
+      // Use the utility function to validate number of guests for each room
+      const guestValidationError = validateNumberOfGuests(
+        room.pk,
+        numberOfGuests
+      );
+      if (guestValidationError) {
+        return sendError(400, guestValidationError);
       }
+
+      // Use the utility function to calculate booking price
+      const bookingPrice = calculateBookingPrice(
+        room.price,
+        checkInDate,
+        checkOutDate
+      );
+      totalPrice += bookingPrice;
+
+      // Add booking details to the array without name and email
+      bookingDetails.push({
+        roomId: room.sk,
+        roomType,
+        numberOfGuests,
+        checkInDate,
+        checkOutDate,
+        totalPrice: bookingPrice,
+      });
+
+      // Call the toggleAvailability function to set the room to unavailable
+      await toggleAvailability(room.pk, room.sk, false); // Toggling availability to false
     }
 
     // Store the entire order in the roomorders-db table
