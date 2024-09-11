@@ -10,7 +10,7 @@ const validateNumberOfGuests = (roomType, numberOfGuests) => {
     return { error: "The number of guests must be greater than 0." };
   }
 
-  // Validate number of guests per room type
+  //Validerar numret av gäster beroende på rum
   const maxGuests = {
     singleroom: 1,
     doubleroom: 2,
@@ -23,7 +23,6 @@ const validateNumberOfGuests = (roomType, numberOfGuests) => {
     };
   }
 
-  // No validation errors
   return null;
 };
 

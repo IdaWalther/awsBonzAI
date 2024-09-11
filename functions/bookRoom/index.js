@@ -1,13 +1,13 @@
 const { db } = require("../../services/index");
 const { sendResponse, sendError } = require("../../responses/index");
-const { v4: uuidv4 } = require("uuid"); // Importing UUID
+const { v4: uuidv4 } = require("uuid"); // Importerar UUID
 const { validateNumberOfGuests } = require("../../utils/checkGuests");
 const { calculateBookingPrice } = require("../../utils/calculatePrice");
 const { toggleAvailability } = require("../../utils/toggleAvailability");
 
 exports.handler = async (event) => {
   try {
-    // Parse the request body and check for invalid fields
+    //Omvandlar JSON-strängen till JS-objekt. 
     const { bookings, name, email } = JSON.parse(event.body);
 
     if (!Array.isArray(bookings) || bookings.length === 0) {
@@ -22,7 +22,7 @@ exports.handler = async (event) => {
       });
     }
 
-    // Validate request body for required fields
+    //Anger obligatoriska fält
     const requiredFields = [
       "roomType",
       "numberOfGuests",
@@ -30,6 +30,7 @@ exports.handler = async (event) => {
       "checkOutDate",
     ];
 
+    //loopar igenom bokning/bokningar och kontrollerar obligatoriska fält
     for (const booking of bookings) {
       const bookingFields = Object.keys(booking);
 
@@ -41,6 +42,7 @@ exports.handler = async (event) => {
         });
       }
 
+      //Kontroll av att antalet fält i bokningsobjektet stämmer överens med obligatoriska fält
       if (bookingFields.length !== requiredFields.length) {
         return sendError(400, {
           error: `Extra fields found in booking: ${JSON.stringify(booking)}`,
@@ -48,18 +50,18 @@ exports.handler = async (event) => {
       }
     }
 
-    // Generate a unique ID for the entire order
+    //Ger ordern ett ID
     const orderId = uuidv4();
 
-    // Booking logic
+    // Bokningslogik
     let totalPrice = 0;
-    const bookingDetails = []; // To store details of each booking
-    const roomsToUpdate = []; // To store the rooms to be updated
+    const bookingDetails = []; //Lagrar detaljer om bokningen
 
+    //loopar igenom bokning/bokningar 
     for (const booking of bookings) {
       const { roomType, numberOfGuests, checkInDate, checkOutDate } = booking;
 
-      // Query the rooms for the specified room type
+      //Letar upp lediga rum utifrån roomType
       const queryParams = {
         TableName: "rooms-db",
         KeyConditionExpression: "pk = :pk",
@@ -74,16 +76,17 @@ exports.handler = async (event) => {
         const { Items } = await db.query(queryParams);
         const availableRooms = Items;
 
+        //Om inga lediga rum finns skickas felmeddelande
         if (!Array.isArray(availableRooms) || availableRooms.length === 0) {
           return sendError(400, {
             error: `Room type ${roomType} is not available at the moment.`,
           });
         }
 
-        // Find the first available room of the specified type
+        //Hitta första lediga rum av rätt typ
         const room = availableRooms[0];
 
-        // Use the utility function to validate number of guests for each room
+        //Kallar på utility-funktionen för att validera antalet gäster för varje rum
         const guestValidationError = validateNumberOfGuests(
           room.pk,
           numberOfGuests
@@ -92,7 +95,7 @@ exports.handler = async (event) => {
           return sendError(400, guestValidationError);
         }
 
-        // Use the utility function to calculate booking price
+        //Kallar på utility-funktionen för att beräkna pris
         const bookingPrice = calculateBookingPrice(
           room.price,
           checkInDate,
@@ -100,7 +103,7 @@ exports.handler = async (event) => {
         );
         totalPrice += bookingPrice;
 
-        // Add booking details to the array without name and email
+        //Lägg in bokningsdetaljerna i en array utan namn och e-mail
         bookingDetails.push({
           roomId: room.sk,
           roomType,
@@ -110,24 +113,24 @@ exports.handler = async (event) => {
           totalPrice: bookingPrice,
         });
 
-        // Call the toggleAvailability function to set the room to unavailable
-        await toggleAvailability(room.pk, room.sk, false); // Toggling availability to false
+        //Kallar på utility-funktionen för att ändra rum till available: false 
+        await toggleAvailability(room.pk, room.sk, false);
       } catch (error) {
         console.error("Error querying room availability:", error);
         return sendError(500, { message: "Internal server error" });
       }
     }
 
-    // Store the entire order in the roomorders-db table
+    //Lägger in ordern i roomorders-db
     const orderParams = {
       TableName: "roomorders-db",
       Item: {
-        pk: orderId, // Use orderId as the primary key
+        pk: orderId,
         totalPrice,
-        bookings: bookingDetails, // Store the details of each booking
-        name, // Store name at the order level
-        email, // Store email at the order level
-        createdAt: new Date().toISOString(), // Optional: store creation timestamp
+        bookings: bookingDetails,
+        name,
+        email,
+        createdAt: new Date().toISOString(),
       },
     };
 
@@ -138,12 +141,12 @@ exports.handler = async (event) => {
       return sendError(500, { message: "Internal server error" });
     }
 
-    // Respond with success message and order details
+    //Skickar svar om att bokning genomförts samt detaljer om bokningen
     return sendResponse(200, {
       message: "Rooms booked successfully",
-      orderId, // Include the order ID
+      orderId,
       totalPrice,
-      bookings: bookingDetails, // Include booking details
+      bookings: bookingDetails,
     });
   } catch (error) {
     console.error("Error booking rooms:", error);

@@ -1,5 +1,4 @@
-const { db } = require("../services/index"); // Adjust the path as necessary
-
+const { db } = require("../services/index");
 /**
  * Toggles the "available" status of rooms in DynamoDB.
  * @param {string} pk - The primary key of the room (e.g., room type).
