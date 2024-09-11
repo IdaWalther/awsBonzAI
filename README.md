@@ -39,7 +39,8 @@
 
   **Update an order (PUT)**  
 *http://INVOKE-URL/orders/:id*  
-Använd PK för ordern som path parameter  
+Använd PK för ordern som path parameter.  
+
 För att ta bort ett rum från order, fyll i roomId, roomType samt sätt "delete" till true.
 ```JSON
 {
