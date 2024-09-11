@@ -1,26 +1,29 @@
 const { db } = require("../../services/index");
 const { sendResponse, sendError } = require("../../responses/index");
-const { validateNumberOfGuests } = require("../../utils/checkGuests");
-const { calculateBookingPrice } = require("../../utils/calculatePrice");
-const { toggleAvailability } = require("../../utils/toggleAvailability");
-const { findAvailableRoom } = require("../../utils/findRoom");
+const { deleteRoomFromBooking } = require("./utils/deleteRoomFromBooking");
+const { updateExistingRoom } = require("./utils/updateExistingRoom");
+const { addNewRoom } = require("./utils/addNewRoom");
 
 exports.handler = async (event) => {
   console.log("Received Event:", JSON.stringify(event, null, 2));
 
   try {
+    // Loggar eventets pathParameters för felsökning
     console.log("event.pathParameters:", event.pathParameters);
     const bookingId = event.pathParameters && event.pathParameters.id;
     console.log("Extracted bookingId:", bookingId);
 
+    // Parsar event.body om det är en sträng, annars använder det som det är
     const updateData =
       typeof event.body === "string" ? JSON.parse(event.body) : event.body;
     console.log("Extracted updateData:", updateData);
 
+    // Kontrollerar om bookingId och updateData finns
     if (!bookingId || !updateData) {
       return sendError(400, "bookingId and updateData are required.");
     }
 
+    // Hämta den befintliga ordern från DynamoDB
     const getParams = {
       TableName: "roomorders-db",
       Key: { pk: bookingId },
@@ -35,6 +38,7 @@ exports.handler = async (event) => {
     let updatedBookings = [...currentBookings];
     let newTotalPrice = 0;
 
+    // Går igenom varje bokning som ska uppdateras
     for (const updatedBooking of updateData.bookings) {
       const {
         roomId,
@@ -45,108 +49,53 @@ exports.handler = async (event) => {
         delete: deleteRoom,
       } = updatedBooking;
 
-      if (deleteRoom && roomId && roomType) {
-        // Room deletion logic
-        const roomIndex = updatedBookings.findIndex(
-          (b) => b.roomId === roomId && b.roomType === roomType
-        );
-        if (roomIndex !== -1) {
-          // Remove room from updatedBookings
-          updatedBookings.splice(roomIndex, 1);
-
-          // Toggle room availability back to true
-          await toggleAvailability(roomType, roomId, true);
-        } else {
-          return sendError(
-            404,
-            `Room with ID ${roomId} not found in existing bookings.`
-          );
+      try {
+        if (deleteRoom && roomId && roomType) {
+          // Om rummet ska tas bort, anropa funktionen för att ta bort rummet
+          await deleteRoomFromBooking(roomId, roomType, updatedBookings);
+          continue; // Hoppa över vidare bearbetning för detta rum
         }
-        continue; // Skip further processing for this room as it's deleted
-      }
 
-      if (roomId) {
-        // Existing room: Validate and update
-        const existingRoom = currentBookings.find((b) => b.roomId === roomId);
-        if (existingRoom) {
-          const guestValidationError = validateNumberOfGuests(
+        if (roomId) {
+          // Om roomId finns, uppdatera ett befintligt rum
+          const existingRoom = currentBookings.find((b) => b.roomId === roomId);
+          if (!existingRoom) {
+            return sendError(
+              404,
+              `Room with ID ${roomId} not found in existing bookings.`
+            );
+          }
+          await updateExistingRoom(
+            existingRoom,
+            roomId,
             roomType,
-            numberOfGuests
-          );
-          if (guestValidationError) {
-            return sendError(400, guestValidationError);
-          }
-
-          // Fetch the price of the room from the database
-          const roomParams = {
-            TableName: "rooms-db", // Adjust this if your room table has a different name
-            Key: { pk: roomType, sk: roomId },
-          };
-          const roomResult = await db.get(roomParams);
-          const roomPrice = roomResult.Item?.price;
-          if (roomPrice === undefined) {
-            return sendError(404, `Price for roomId ${roomId} not found.`);
-          }
-
-          // Update existing booking
-          Object.assign(existingRoom, {
             numberOfGuests,
             checkInDate,
             checkOutDate,
-            roomType,
-            totalPrice: calculateBookingPrice(
-              roomPrice,
-              checkInDate,
-              checkOutDate
-            ),
-          });
+            db
+          );
         } else {
-          return sendError(
-            404,
-            `Room with ID ${roomId} not found in existing bookings.`
+          // Om inget roomId finns, lägg till ett nytt rum
+          await addNewRoom(
+            roomType,
+            numberOfGuests,
+            checkInDate,
+            checkOutDate,
+            updatedBookings
           );
         }
-      } else {
-        // New room: Find and add
-        const room = await findAvailableRoom(roomType, numberOfGuests);
-        if (!room) {
-          return sendError(
-            400,
-            `No available room found for type ${roomType}.`
-          );
-        }
-        const guestValidationError = validateNumberOfGuests(
-          roomType,
-          numberOfGuests
-        );
-        if (guestValidationError) {
-          return sendError(400, guestValidationError);
-        }
-        const bookingPrice = calculateBookingPrice(
-          room.price,
-          checkInDate,
-          checkOutDate
-        );
-
-        updatedBookings.push({
-          roomId: room.sk,
-          roomType,
-          numberOfGuests,
-          checkInDate,
-          checkOutDate,
-          totalPrice: bookingPrice,
-        });
-
-        await toggleAvailability(room.pk, room.sk, false);
+      } catch (error) {
+        return sendError(400, error.message);
       }
     }
 
-    // Recalculate total price
+    // Beräkna det nya totala priset
     newTotalPrice = updatedBookings.reduce(
       (total, booking) => total + booking.totalPrice,
       0
     );
 
+    // Uppdatera den befintliga ordern i DynamoDB
     const updateParams = {
       TableName: "roomorders-db",
       Key: { pk: bookingId },
