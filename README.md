@@ -56,6 +56,8 @@ För att ta bort ett rum från order, fyll i roomId, roomType samt sätt "delete
 För att uppdatera ett eller flera befintliga rum i orden följ mallen under. Ange roomId samt roomType för att specifiera vilket rum som ska uppdateras. Resterande attribut är valfria.  
 
 För att lägga till ett rum i ordern, ta bort "roomId". Den kommer automatisk söka upp ett ledigt rum från den angivna roomType. Ange alla attributs förutom roomId i bookings.
+
+"name" och "email" är valfritt och behöver inte anges om man inte vill uppdatera dom i ordern.
 ```JSON
 {
     "name": "NAMN",
