@@ -39,7 +39,8 @@
 
   **Update an order (PUT)**  
 *http://INVOKE-URL/orders/:id*  
-Använd PK för ordern som path parameter  
+Använd PK för ordern som path parameter.  
+
 För att ta bort ett rum från order, fyll i roomId, roomType samt sätt "delete" till true.
 ```JSON
 {
@@ -53,7 +54,11 @@ För att ta bort ett rum från order, fyll i roomId, roomType samt sätt "delete
 }
 ```
  
-För att uppdatera ett eller flera befintliga rum i orden följ mallen under. Man kan även ändra namn och mail på bokningen. Bara "roomId" och "roomType" är nödvändiga för att hitta rätt rum. Allt annat är valfritt och behöver inte vara med
+För att uppdatera ett eller flera befintliga rum i orden följ mallen under. Ange roomId samt roomType för att specifiera vilket rum som ska uppdateras. Resterande attribut är valfria.  
+
+För att lägga till ett rum i ordern, ta bort "roomId". Den kommer automatisk söka upp ett ledigt rum från den angivna roomType. Ange alla attributs förutom roomId i bookings.
+
+"name" och "email" är valfritt och behöver inte anges om man inte vill uppdatera dom i ordern.
 ```JSON
 {
     "name": "NAMN",
