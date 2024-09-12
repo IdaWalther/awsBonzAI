@@ -2,7 +2,6 @@ const { findAvailableRoom } = require("../../../utils/findRoom");
 const { validateNumberOfGuests } = require("../../../utils/checkGuests");
 const { calculateBookingPrice } = require("../../../utils/calculatePrice");
 const { toggleAvailability } = require("../../../utils/toggleAvailability");
-const { sendError } = require("../../../responses/index");
 
 async function addNewRoom(
   roomType,
@@ -13,21 +12,16 @@ async function addNewRoom(
 ) {
   // Validate required fields
   if (!roomType || !numberOfGuests || !checkInDate || !checkOutDate) {
-    return sendError(
-      400,
-      "Missing required fields: roomType, numberOfGuests, checkInDate, and checkOutDate are all required to add a new room."
-    );
+    throw {
+      statusCode: 400,
+      message:
+        "Missing required fields: roomType, numberOfGuests, checkInDate, and checkOutDate are all required to add a new room.",
+    };
   }
 
-  const room = await findAvailableRoom(roomType, numberOfGuests);
-  if (!room) {
-    return sendError(404, `No available room found for type ${roomType}.`);
-  }
+  const room = await findAvailableRoom(roomType);
 
-  const guestValidationError = validateNumberOfGuests(roomType, numberOfGuests);
-  if (guestValidationError) {
-    return sendError(400, guestValidationError);
-  }
+  validateNumberOfGuests(roomType, numberOfGuests);
 
   const bookingPrice = calculateBookingPrice(
     room.price,

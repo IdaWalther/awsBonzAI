@@ -17,14 +17,18 @@ const findAvailableRoom = async (roomType) => {
     const availableRooms = Items;
 
     if (!Array.isArray(availableRooms) || availableRooms.length === 0) {
-      throw new Error(`Room type ${roomType} is not available at the moment.`);
+      const error = new Error(
+        `Room type ${roomType} is not available at the moment.`
+      );
+      error.statusCode = 404; // Add the status code to the error
+      throw error;
     }
 
     // Return the first available room
     return availableRooms[0];
   } catch (error) {
     console.error("Error querying room availability:", error);
-    throw new Error("Internal server error");
+    throw error;
   }
 };
 

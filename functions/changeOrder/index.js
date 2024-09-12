@@ -8,29 +8,31 @@ exports.handler = async (event) => {
   console.log("Received Event:", JSON.stringify(event, null, 2));
 
   try {
-    // Loggar eventets pathParameters för felsökning
     console.log("event.pathParameters:", event.pathParameters);
     const bookingId = event.pathParameters && event.pathParameters.id;
     console.log("Extracted bookingId:", bookingId);
 
-    // Parsar event.body om det är en sträng, annars använder det som det är
+    // Extraherar uppdateringsdata från begäran
     const updateData =
       typeof event.body === "string" ? JSON.parse(event.body) : event.body;
     console.log("Extracted updateData:", updateData);
 
-    // Kontrollerar om bookingId och updateData finns
+    // Kontrollera om bookingId eller updateData saknas
     if (!bookingId || !updateData) {
+      console.error("bookingId or updateData missing");
       return sendError(400, "bookingId and updateData are required.");
     }
 
-    // Hämta den befintliga ordern från DynamoDB
-    const getParams = {
-      TableName: "roomorders-db",
-      Key: { pk: bookingId },
-    };
+    // Hämta befintlig order från databasen med hjälp av bookingId
+    const getParams = { TableName: "roomorders-db", Key: { pk: bookingId } };
+    console.log("Fetching existing order with params:", getParams);
 
     const existingOrder = await db.get(getParams);
+    console.log("Fetched existing order:", existingOrder);
+
+    // Kontrollera om ordern inte finns
     if (!existingOrder.Item) {
+      console.error("Order not found for bookingId:", bookingId);
       return sendError(404, "Order not found.");
     }
 
@@ -38,7 +40,7 @@ exports.handler = async (event) => {
     let updatedBookings = [...currentBookings];
     let newTotalPrice = 0;
 
-    // Går igenom varje bokning som ska uppdateras
+    // Iterera genom varje uppdatering av bokning
     for (const updatedBooking of updateData.bookings) {
       const {
         roomId,
@@ -48,24 +50,32 @@ exports.handler = async (event) => {
         checkOutDate,
         delete: deleteRoom,
       } = updatedBooking;
+      console.log("Processing booking:", updatedBooking);
 
       try {
+        // Ta bort rum om "deleteRoom" är satt och rumsuppgifter finns
         if (deleteRoom && roomId && roomType) {
-          // Om rummet ska tas bort, anropa funktionen för att ta bort rummet
+          console.log("Deleting room with ID:", roomId);
           await deleteRoomFromBooking(roomId, roomType, updatedBookings);
-          continue; // Hoppa över vidare bearbetning för detta rum
+          console.log("Room deleted successfully");
+          continue;
         }
 
+        // Uppdatera befintligt rum om roomId finns
         if (roomId) {
-          // Om roomId finns, uppdatera ett befintligt rum
+          console.log("Updating existing room with ID:", roomId);
           const existingRoom = currentBookings.find((b) => b.roomId === roomId);
           if (!existingRoom) {
+            console.error(
+              "Room with ID not found in existing bookings:",
+              roomId
+            );
             return sendError(
               404,
               `Room with ID ${roomId} not found in existing bookings.`
             );
           }
-          const updateResult = await updateExistingRoom(
+          await updateExistingRoom(
             existingRoom,
             roomId,
             roomType,
@@ -74,36 +84,34 @@ exports.handler = async (event) => {
             checkOutDate,
             db
           );
-          if (updateResult && updateResult.statusCode) {
-            // If an error response is returned, propagate it
-            return updateResult;
-          }
         } else {
-          // Om inget roomId finns, lägg till ett nytt rum
-          const addResult = await addNewRoom(
+          // Lägg till ett nytt rum om roomId inte finns
+          console.log("Adding new room of type:", roomType);
+          await addNewRoom(
             roomType,
             numberOfGuests,
             checkInDate,
             checkOutDate,
             updatedBookings
           );
-          if (addResult && addResult.statusCode) {
-            // If an error response is returned, propagate it
-            return addResult;
-          }
         }
       } catch (error) {
+        console.error("Error processing booking:", error);
+        if (error.statusCode) {
+          return sendError(error.statusCode, error.message);
+        }
         return sendError(400, error.message);
       }
     }
 
-    // Beräkna det nya totala priset
+    // Beräkna nytt totalpris för alla bokningar
     newTotalPrice = updatedBookings.reduce(
       (total, booking) => total + booking.totalPrice,
       0
     );
+    console.log("Calculated new total price:", newTotalPrice);
 
-    // Uppdatera den befintliga ordern i DynamoDB
+    // Uppdatera ordern i databasen med de nya uppgifterna
     const updateParams = {
       TableName: "roomorders-db",
       Key: { pk: bookingId },
@@ -124,8 +132,11 @@ exports.handler = async (event) => {
       ReturnValues: "ALL_NEW",
     };
 
+    console.log("Updating order with params:", updateParams);
     const updatedOrder = await db.update(updateParams);
+    console.log("Order updated successfully:", updatedOrder);
 
+    // Returnera svar med uppdaterad orderinformation
     return sendResponse(200, {
       message: "Order updated successfully",
       updatedOrder: updatedOrder.Attributes,

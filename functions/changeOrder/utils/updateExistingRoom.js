@@ -1,6 +1,6 @@
 const { validateNumberOfGuests } = require("../../../utils/checkGuests");
 const { calculateBookingPrice } = require("../../../utils/calculatePrice");
-const { sendError } = require("../../../responses/index");
+
 async function updateExistingRoom(
   existingRoom,
   roomId,
@@ -10,38 +10,47 @@ async function updateExistingRoom(
   checkOutDate,
   db
 ) {
-  // Validate number of guests and throw a string message instead of an Error object
-  const guestValidationError = validateNumberOfGuests(roomType, numberOfGuests);
-  if (guestValidationError) {
-    return sendError(400, guestValidationError);
-  }
-
   // Fetch room price from the rooms table
   const roomParams = {
     TableName: "rooms-db",
     Key: { pk: roomType, sk: roomId },
   };
 
-  try {
-    const roomResult = await db.get(roomParams);
-    const roomPrice = roomResult.Item?.price;
-    if (roomPrice === undefined) {
-      return sendError(404, `Price for roomId ${roomId} not found.`);
-    }
+  const roomResult = await db.get(roomParams);
+  const roomPrice = roomResult.Item?.price;
 
-    // Update the existing room with new details
-    Object.assign(existingRoom, {
-      numberOfGuests,
-      checkInDate,
-      checkOutDate,
-      roomType,
-      totalPrice: calculateBookingPrice(roomPrice, checkInDate, checkOutDate),
-    });
-  } catch (error) {
-    // Ensure the error is a string
-    return sendError(
-      500,
-      `Error updating room ${roomId}: ${error.message || error}`
+  if (roomPrice === undefined) {
+    throw {
+      statusCode: 500,
+      message: `Price for roomId ${roomId} not found.`,
+    };
+  }
+
+  // Update only the provided fields
+  if (checkInDate !== undefined) {
+    existingRoom.checkInDate = checkInDate;
+  }
+
+  if (checkOutDate !== undefined) {
+    existingRoom.checkOutDate = checkOutDate;
+  }
+
+  if (roomType !== undefined) {
+    existingRoom.roomType = roomType;
+  }
+
+  // Validate number of guests
+  if (numberOfGuests !== undefined) {
+    validateNumberOfGuests(roomType, numberOfGuests);
+    existingRoom.numberOfGuests = numberOfGuests;
+  }
+
+  // Recalculate the total price if checkInDate or checkOutDate is provided
+  if (checkInDate !== undefined || checkOutDate !== undefined) {
+    existingRoom.totalPrice = calculateBookingPrice(
+      roomPrice,
+      existingRoom.checkInDate,
+      existingRoom.checkOutDate
     );
   }
 }
