@@ -11,6 +11,14 @@ async function addNewRoom(
   checkOutDate,
   updatedBookings
 ) {
+  // Validate required fields
+  if (!roomType || !numberOfGuests || !checkInDate || !checkOutDate) {
+    return sendError(
+      400,
+      "Missing required fields: roomType, numberOfGuests, checkInDate, and checkOutDate are all required to add a new room."
+    );
+  }
+
   const room = await findAvailableRoom(roomType, numberOfGuests);
   if (!room) {
     return sendError(404, `No available room found for type ${roomType}.`);
