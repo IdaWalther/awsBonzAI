@@ -11,4 +11,6 @@ const calculateBookingPrice = (roomPrice, checkInDate, checkOutDate) => {
   return roomPrice * days;
 };
 
+//Ingen felhantering här, handler checkar så de angivna värdena är godkände
+
 module.exports = { calculateBookingPrice };

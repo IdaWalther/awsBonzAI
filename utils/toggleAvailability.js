@@ -26,7 +26,9 @@ const toggleAvailability = async (pk, sk, available) => {
     return result;
   } catch (error) {
     console.error("Error toggling room availability:", error);
-    throw new Error("Error updating room availability");
+    const customError = new Error("Error updating room availability");
+    customError.statusCode = 500; // Internal Server Error
+    throw customError;
   }
 };
 
