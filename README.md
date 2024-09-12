@@ -36,6 +36,26 @@
 
   **Delete an order (DELETE)**  
 *http://INVOKE-URL/orders/:id*
+Anropet används för att ta bort ett order från en specifik beställning. Det skickas som en DELETE-förfrågan och kräver att ett giltigt beställnings-**ID** (:id) inkluderas i URL.
+ OBS! Ersätt med beställningens faktiska '**PK**'.
+Vid *lyckad* borttagning returneras följande meddelande:
+```json
+{
+  "data": {
+    "success": true,
+    "message": "Order cancelled successfully"
+  }
+}
+Om ett *felaktigt PK* skickas, returneras ett felmeddelande, som indikerar att beställningen inte hittades:
+```json
+{
+  "success": false,
+  "data": {
+    "success": false,
+    "message": "Order not found"
+  }
+}
+
 
   **Update an order (PUT)**  
 *http://INVOKE-URL/orders/:id*  
