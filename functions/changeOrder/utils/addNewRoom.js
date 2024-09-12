@@ -2,6 +2,7 @@ const { findAvailableRoom } = require("../../../utils/findRoom");
 const { validateNumberOfGuests } = require("../../../utils/checkGuests");
 const { calculateBookingPrice } = require("../../../utils/calculatePrice");
 const { toggleAvailability } = require("../../../utils/toggleAvailability");
+const { sendError } = require("../../../responses/index");
 
 async function addNewRoom(
   roomType,
@@ -12,12 +13,12 @@ async function addNewRoom(
 ) {
   const room = await findAvailableRoom(roomType, numberOfGuests);
   if (!room) {
-    throw new Error(`No available room found for type ${roomType}.`);
+    return sendError(404, `No available room found for type ${roomType}.`);
   }
 
   const guestValidationError = validateNumberOfGuests(roomType, numberOfGuests);
   if (guestValidationError) {
-    throw new Error(guestValidationError);
+    return sendError(400, guestValidationError);
   }
 
   const bookingPrice = calculateBookingPrice(

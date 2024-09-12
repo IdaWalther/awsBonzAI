@@ -65,7 +65,7 @@ exports.handler = async (event) => {
               `Room with ID ${roomId} not found in existing bookings.`
             );
           }
-          await updateExistingRoom(
+          const updateResult = await updateExistingRoom(
             existingRoom,
             roomId,
             roomType,
@@ -74,15 +74,23 @@ exports.handler = async (event) => {
             checkOutDate,
             db
           );
+          if (updateResult && updateResult.statusCode) {
+            // If an error response is returned, propagate it
+            return updateResult;
+          }
         } else {
           // Om inget roomId finns, lägg till ett nytt rum
-          await addNewRoom(
+          const addResult = await addNewRoom(
             roomType,
             numberOfGuests,
             checkInDate,
             checkOutDate,
             updatedBookings
           );
+          if (addResult && addResult.statusCode) {
+            // If an error response is returned, propagate it
+            return addResult;
+          }
         }
       } catch (error) {
         return sendError(400, error.message);

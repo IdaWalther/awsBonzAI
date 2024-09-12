@@ -1,4 +1,5 @@
 const { toggleAvailability } = require("../../../utils/toggleAvailability");
+const { sendError } = require("../../../responses/index");
 
 async function deleteRoomFromBooking(roomId, roomType, updatedBookings) {
   const roomIndex = updatedBookings.findIndex(
@@ -8,7 +9,10 @@ async function deleteRoomFromBooking(roomId, roomType, updatedBookings) {
     updatedBookings.splice(roomIndex, 1);
     await toggleAvailability(roomType, roomId, true);
   } else {
-    throw new Error(`Room with ID ${roomId} not found in existing bookings.`);
+    return sendError(
+      404,
+      `Room with ID ${roomId} not found in existing bookings.`
+    );
   }
 }
 
