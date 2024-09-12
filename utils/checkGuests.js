@@ -6,6 +6,7 @@
  * @throws {string} [error.message] - The error message if the validation fails.
  * @throws {number} [error.statusCode] - The HTTP status code associated with the error.
  */
+
 const validateNumberOfGuests = (roomType, numberOfGuests) => {
   if (numberOfGuests <= 0) {
     const error = new Error("The number of guests must be greater than 0.");
@@ -13,7 +14,7 @@ const validateNumberOfGuests = (roomType, numberOfGuests) => {
     throw error;
   }
 
-  // Validate number of guests per room type
+  //Validerar numret av gäster beroende på rum
   const maxGuests = {
     singleroom: 1,
     doubleroom: 2,

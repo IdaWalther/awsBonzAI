@@ -2,6 +2,8 @@ const { db } = require('../../services/index')
 const { sendResponse, sendError } = require('../../responses/index')
 
 exports.handler = async (event) => {
+
+    //Hämtar alla tillgängliga rum från rooms-db
     try {
         const { Items } = await db.scan({
             TableName: 'rooms-db',

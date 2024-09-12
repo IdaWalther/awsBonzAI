@@ -1,6 +1,7 @@
 const { validateNumberOfGuests } = require("../../../utils/checkGuests");
 const { calculateBookingPrice } = require("../../../utils/calculatePrice");
 
+//Util-funktion som uppdaterar gäster/pris i en bokning
 async function updateExistingRoom(
   existingRoom,
   roomId,
@@ -10,7 +11,8 @@ async function updateExistingRoom(
   checkOutDate,
   db
 ) {
-  // Fetch room price from the rooms table
+
+  //Hämtar rumspris från db
   const roomParams = {
     TableName: "rooms-db",
     Key: { pk: roomType, sk: roomId },
@@ -26,7 +28,7 @@ async function updateExistingRoom(
     };
   }
 
-  // Update only the provided fields
+  //Updaterar endast ifyllda fält 
   if (checkInDate !== undefined) {
     existingRoom.checkInDate = checkInDate;
   }
@@ -39,13 +41,13 @@ async function updateExistingRoom(
     existingRoom.roomType = roomType;
   }
 
-  // Validate number of guests
+  //Kallar på util-funktion för att validera antalet gäster
   if (numberOfGuests !== undefined) {
     validateNumberOfGuests(roomType, numberOfGuests);
     existingRoom.numberOfGuests = numberOfGuests;
   }
 
-  // Recalculate the total price if checkInDate or checkOutDate is provided
+  //Kallar på util-funktion för att beräkna pris om nya datum angetts
   if (checkInDate !== undefined || checkOutDate !== undefined) {
     existingRoom.totalPrice = calculateBookingPrice(
       roomPrice,

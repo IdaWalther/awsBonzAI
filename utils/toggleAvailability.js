@@ -1,5 +1,4 @@
-const { db } = require("../services/index"); // Adjust the path as necessary
-
+const { db } = require("../services/index");
 /**
  * Toggles the "available" status of rooms in DynamoDB.
  * @param {string} pk - The primary key of the room (e.g., room type).
@@ -7,6 +6,7 @@ const { db } = require("../services/index"); // Adjust the path as necessary
  * @param {boolean} available - The new availability status to set (true or false).
  * @returns {Promise<Object>} - The result of the DynamoDB update operation.
  */
+
 const toggleAvailability = async (pk, sk, available) => {
   const updateParams = {
     TableName: "rooms-db",
@@ -27,7 +27,7 @@ const toggleAvailability = async (pk, sk, available) => {
   } catch (error) {
     console.error("Error toggling room availability:", error);
     const customError = new Error("Error updating room availability");
-    customError.statusCode = 500; // Internal Server Error
+    customError.statusCode = 500;
     throw customError;
   }
 };

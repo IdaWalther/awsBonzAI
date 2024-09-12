@@ -53,6 +53,7 @@ exports.handler = async (event) => {
       console.log("Processing booking:", updatedBooking);
 
       try {
+
         // Ta bort rum om "deleteRoom" är satt och rumsuppgifter finns
         if (deleteRoom && roomId && roomType) {
           console.log("Deleting room with ID:", roomId);

@@ -1,7 +1,9 @@
 const { db } = require('../../services/index.js');
-const { sendResponse, sendError } = require('../../responses/index.js'); 
+const { sendResponse, sendError } = require('../../responses/index.js');
 
 exports.handler = async (event) => {
+
+    //Hämtar order från roomorders-db via url
     try {
         const orderNumber = event.pathParameters.id;
         const data = await db.get({
@@ -10,11 +12,11 @@ exports.handler = async (event) => {
                 pk: orderNumber,
             }
         })
-        if(!data.Item) {
+        if (!data.Item) {
             return sendError(404, 'No orders found');
         }
         return sendResponse(200, data.Item);
     } catch (error) {
-        return sendError(404, {message: error.message});
+        return sendError(404, { message: error.message });
     }
 }

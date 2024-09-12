@@ -3,16 +3,15 @@ const { sendResponse, sendError } = require("../../responses/index");
 const { toggleAvailability } = require("../../utils/toggleAvailability");
 
 exports.handler = async (event) => {
-  // Hämta 'pk' z pathParameters
+  // Hämta order-ID (pk) via pathParameters
   const { id } = event.pathParameters;
 
-  // Kolla upp om 'id' (pk) har levererats
   if (!id) {
     return sendError(400, { success: false, message: "Missing order ID" });
   }
 
   try {
-    // Valfri kontroll för att beställningen finns
+    //Hämtar ordern från databasen 
     const { Item } = await db.get({
       TableName: "roomorders-db",
       Key: { pk: id },
@@ -22,14 +21,14 @@ exports.handler = async (event) => {
       return sendError(404, { success: false, message: "Order not found" });
     }
 
-    // Extract booked rooms from the fetched order
+    //Tar ut bokade rum från ordern
     const { bookings: bookedRooms } = Item;
 
-    // Loop through each booked room and toggle availability to true
+    //Loopar igenom rummen och ändrar availability till true via vår utility-funktion
     for (const booking of bookedRooms) {
-      const { roomType, roomId } = booking; // Ensure roomId is available
+      const { roomType, roomId } = booking;
 
-      console.log("Processing booking:", booking); // Debugging log
+      console.log("Processing booking:", booking);
 
       if (!roomId) {
         console.error("roomId is undefined for booking:", booking);
@@ -40,7 +39,6 @@ exports.handler = async (event) => {
       }
 
       try {
-        // Toggle the availability status to true
         await toggleAvailability(roomType, roomId, true);
       } catch (toggleError) {
         console.error("Error toggling room availability:", toggleError);
@@ -51,7 +49,7 @@ exports.handler = async (event) => {
       }
     }
 
-    // Ta bort orders
+    //Ta bort ordern
     await db.delete({
       TableName: "roomorders-db",
       Key: { pk: id },

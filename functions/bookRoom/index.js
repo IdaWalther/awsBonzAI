@@ -34,10 +34,11 @@ exports.handler = async (event) => {
       "checkOutDate",
     ];
 
+    //loopar igenom bokning/bokningar och kontrollerar obligatoriska fält
     for (const booking of bookings) {
       const bookingFields = Object.keys(booking);
 
-      // Kontrollera efter saknade fält
+      // Kontrollerar efter saknade fält
       const missingFields = requiredFields.filter(
         (field) => !bookingFields.includes(field)
       );
@@ -49,7 +50,7 @@ exports.handler = async (event) => {
         });
       }
 
-      // Kontrollera efter extra fält
+      // Kontrollerar efter extra fält
       const extraFields = bookingFields.filter(
         (field) => !requiredFields.includes(field)
       );
@@ -69,6 +70,7 @@ exports.handler = async (event) => {
     let totalPrice = 0;
     const bookingDetails = [];
 
+    //loopar igenom bokning/bokningar 
     for (const booking of bookings) {
       const { roomType, numberOfGuests, checkInDate, checkOutDate } = booking;
 
