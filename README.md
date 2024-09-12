@@ -56,8 +56,6 @@ För att ta bort ett rum från order, fyll i roomId, roomType samt sätt "delete
  
 För att uppdatera ett eller flera befintliga rum i orden följ mallen under. Ange roomId samt roomType för att specifiera vilket rum som ska uppdateras. Resterande attribut är valfria.  
 
-För att lägga till ett rum i ordern, ta bort "roomId". Den kommer automatisk söka upp ett ledigt rum från den angivna roomType. Ange alla attributs förutom roomId i bookings.
-
 "name" och "email" är valfritt och behöver inte anges om man inte vill uppdatera dom i ordern.
 ```JSON
 {
@@ -74,3 +72,19 @@ För att lägga till ett rum i ordern, ta bort "roomId". Den kommer automatisk s
     ]
 }
 ```
+
+För att lägga till ett rum i ordern, ange endast roomType, samt numberOfGuests, checkInDate och checkOutDate. Den kommer automatiskt känna av att rum id saknas och då lägga till ett nytt rum i ordern om ett rum i den typen finns ledig.
+```JSON
+{
+    "bookings": [
+        {
+            "numberOfGuests": 1,
+            "checkOutDate": "2024-10-02",
+            "checkInDate": "2024-10-01",
+            "roomType": "singleroom"
+        }
+    ]
+}
+```
+
+Logiken för att uppdatera order loopar genom "bookings" arrayen, så det går att utföra flera olika operationer i samma request. 
