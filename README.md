@@ -1,69 +1,76 @@
-<!--
-title: 'AWS Simple HTTP Endpoint example in NodeJS'
-description: 'This template demonstrates how to make a simple HTTP API with Node.js running on AWS Lambda and API Gateway using the Serverless Framework.'
-layout: Doc
-framework: v4
-platform: AWS
-language: nodeJS
-authorLink: 'https://github.com/serverless'
-authorName: 'Serverless, Inc.'
-authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
--->
 
-# Serverless Framework Node HTTP API on AWS
 
-This template demonstrates how to make a simple HTTP API with Node.js running on AWS Lambda and API Gateway using the Serverless Framework.
+ **Get all rooms (GET)**  
+  *http://INVOKE-URL/rooms*
 
-This template does not include any kind of persistence (database). For more advanced examples, check out the [serverless/examples repository](https://github.com/serverless/examples/) which includes Typescript, Mongo, DynamoDB and other examples.
+ **Book room (POST)**  
+  *http://INVOKE-URL/rooms*
+  ```JSON
+  {
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "bookings": [
+    {
+      "roomType": "singleroom",
+      "numberOfGuests": 1,
+      "checkInDate": "2024-10-01",
+      "checkOutDate": "2024-10-05"
+    },
 
-## Usage
+    {
+      "roomType": "singleroom",
+      "numberOfGuests": 1,
+      "checkInDate": "2024-10-01",
+      "checkOutDate": "2024-10-05"
+    }
+    
+  ]
+  }
+  ```
 
-### Deployment
+  **Get specific order (GET)**  
+*http://INVOKE-URL/orders/:id*
 
-In order to deploy the example, you need to run the following command:
+  **Get all orders as an admin (GET)**  
+*http://INVOKE-URL/orders/admin*
 
+  **Delete an order (DELETE)**  
+*http://INVOKE-URL/orders/:id*
+
+  **Update an order (PUT)**  
+*http://INVOKE-URL/orders/:id*  
+Använd PK för ordern som path parameter.  
+
+För att ta bort ett rum från order, fyll i roomId, roomType samt sätt "delete" till true.
+```JSON
+{
+  "bookings": [
+    {
+     "delete": true,                    
+     "roomId": "1",
+     "roomType": "singleroom"
+    }             
+  ]
+}
 ```
-serverless deploy
+ 
+För att uppdatera ett eller flera befintliga rum i orden följ mallen under. Ange roomId samt roomType för att specifiera vilket rum som ska uppdateras. Resterande attribut är valfria.  
+
+För att lägga till ett rum i ordern, ta bort "roomId". Den kommer automatisk söka upp ett ledigt rum från den angivna roomType. Ange alla attributs förutom roomId i bookings.
+
+"name" och "email" är valfritt och behöver inte anges om man inte vill uppdatera dom i ordern.
+```JSON
+{
+    "name": "NAMN",
+    "email": "EMAIL@EMAIL.COM",
+    "bookings": [
+        {
+            "numberOfGuests": 1,
+            "checkOutDate": "2024-10-02",
+            "checkInDate": "2024-10-01",
+            "roomId": "1",
+            "roomType": "singleroom"
+        }
+    ]
+}
 ```
-
-After running deploy, you should see output similar to:
-
-```
-Deploying "serverless-http-api" to stage "dev" (us-east-1)
-
-✔ Service deployed to stack serverless-http-api-dev (91s)
-
-endpoint: GET - https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/
-functions:
-  hello: serverless-http-api-dev-hello (1.6 kB)
-```
-
-_Note_: In current form, after deployment, your API is public and can be invoked by anyone. For production deployments, you might want to configure an authorizer. For details on how to do that, refer to [HTTP API (API Gateway V2) event docs](https://www.serverless.com/framework/docs/providers/aws/events/http-api).
-
-### Invocation
-
-After successful deployment, you can call the created application via HTTP:
-
-```
-curl https://xxxxxxx.execute-api.us-east-1.amazonaws.com/
-```
-
-Which should result in response similar to:
-
-```json
-{ "message": "Go Serverless v4! Your function executed successfully!" }
-```
-
-### Local development
-
-The easiest way to develop and test your function is to use the `dev` command:
-
-```
-serverless dev
-```
-
-This will start a local emulator of AWS Lambda and tunnel your requests to and from AWS Lambda, allowing you to interact with your function as if it were running in the cloud.
-
-Now you can invoke the function as before, but this time the function will be executed locally. Now you can develop your function locally, invoke it, and see the results immediately without having to re-deploy.
-
-When you are done developing, don't forget to run `serverless deploy` to deploy the function to the cloud.

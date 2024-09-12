@@ -6,6 +6,7 @@ const { db } = require("../services/index");
  * @param {boolean} available - The new availability status to set (true or false).
  * @returns {Promise<Object>} - The result of the DynamoDB update operation.
  */
+
 const toggleAvailability = async (pk, sk, available) => {
   const updateParams = {
     TableName: "rooms-db",
@@ -25,7 +26,9 @@ const toggleAvailability = async (pk, sk, available) => {
     return result;
   } catch (error) {
     console.error("Error toggling room availability:", error);
-    throw new Error("Error updating room availability");
+    const customError = new Error("Error updating room availability");
+    customError.statusCode = 500;
+    throw customError;
   }
 };
 
