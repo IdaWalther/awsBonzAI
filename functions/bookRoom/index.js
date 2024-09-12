@@ -6,6 +6,7 @@ const { validateNumberOfGuests } = require("../../utils/checkGuests");
 const { calculateBookingPrice } = require("../../utils/calculatePrice");
 const { toggleAvailability } = require("../../utils/toggleAvailability");
 const { findAvailableRoom } = require("../../utils/findRoom");
+const { checkDate } = require("../../utils/validateDate");
 
 exports.handler = async (event) => {
   try {
@@ -75,6 +76,9 @@ exports.handler = async (event) => {
       const { roomType, numberOfGuests, checkInDate, checkOutDate } = booking;
 
       try {
+        // Kontrollera att checkInDate och checkOutDate är i korrekt format
+        checkDate(checkInDate, checkOutDate);
+        
         // Hitta ett tillgängligt rum av specifik typ
         const room = await findAvailableRoom(roomType);
 
