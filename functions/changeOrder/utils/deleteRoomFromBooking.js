@@ -1,5 +1,6 @@
 const { toggleAvailability } = require("../../../utils/toggleAvailability");
 
+//Util-funktion som tar bort rum i bokning samt ändrar tillgängligheten i databasen
 async function deleteRoomFromBooking(roomId, roomType, updatedBookings) {
   const roomIndex = updatedBookings.findIndex(
     (b) => b.roomId === roomId && b.roomType === roomType

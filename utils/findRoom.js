@@ -1,6 +1,6 @@
-// utils/findRoom.js
 const { db } = require("../services/index");
 
+//Util-funktion som hittar ledigt rum att boka
 const findAvailableRoom = async (roomType) => {
   const queryParams = {
     TableName: "rooms-db",
@@ -20,11 +20,11 @@ const findAvailableRoom = async (roomType) => {
       const error = new Error(
         `Room type ${roomType} is not available at the moment.`
       );
-      error.statusCode = 404; // Add the status code to the error
+      error.statusCode = 404;
       throw error;
     }
 
-    // Return the first available room
+    //Returnerar första tillgängliga rum
     return availableRooms[0];
   } catch (error) {
     console.error("Error querying room availability:", error);
