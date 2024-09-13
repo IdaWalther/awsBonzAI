@@ -10,6 +10,8 @@ Målet att skapa en applikation med funktioner som gör det möjligt att se alla
 
   http://INVOKE-URL/rooms
 
+  Detta **API-endpoint** returnerar en lista över alla rum som för närvarande är tillgängliga i systemet. Du får en översikt över rumstyper, deras tillgänglighet och andra relevanta detaljer.
+
 ---
 
 ## Book room (POST)  
@@ -48,6 +50,8 @@ Målet att skapa en applikation med funktioner som gör det möjligt att se alla
 
 http://INVOKE-URL/orders/:id
 
+Detta **API-endpoint** används för att hämta detaljerna för en specifik beställning. Du behöver ange **orderns ID** som en del av URL:en för att få information om den valda beställningen.
+
 ---
 
 ## Get all orders as an admin (GET) 
@@ -63,7 +67,8 @@ http://INVOKE-URL/orders/admin
 http://INVOKE-URL/orders/:id
 
 Anropet används för att ta bort ett order från en specifik beställning. Det skickas som en DELETE-förfrågan och kräver att ett giltigt beställnings-**ID** (:id) inkluderas i URL.
- **OBS!** Ersätt med beställningens **faktiska 'PK**'.
+
+**OBS!** Ersätt med beställningens **faktiska 'PK**'.
 Vid **lyckad** borttagning returneras följande meddelande:
 
 ```json
