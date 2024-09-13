@@ -80,9 +80,11 @@ Vid **lyckad** borttagning returneras följande meddelande:
     "message": "Order cancelled successfully"
   }
 }
+
 ```
 
 Om ett **felaktigt PK** skickas, returneras ett felmeddelande, som indikerar att beställningen inte hittades:
+
 
 ```json
 {
@@ -92,6 +94,7 @@ Om ett **felaktigt PK** skickas, returneras ett felmeddelande, som indikerar att
     "message": "Order not found"
   }
 }
+
 ```
 
 ---
@@ -100,6 +103,7 @@ Om ett **felaktigt PK** skickas, returneras ett felmeddelande, som indikerar att
  *Uppdatera en beställning genom att ange ID. Du kan lägga till eller ta bort rum.*
 
 http://INVOKE-URL/orders/:id
+
 
 Använd PK för ordern som path parameter.  
 

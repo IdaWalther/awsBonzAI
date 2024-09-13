@@ -9,8 +9,8 @@ const checkDate = (checkInDate, checkOutDate) => {
     }
 
     //Kontrollera att checkInDate inte är efter checkOutDate
-    if (checkInDate > checkOutDate) {
-        const error = new Error("The check-out date can't be before the check-in date");
+    if (checkInDate >= checkOutDate) {
+        const error = new Error("The check-out date can't be the same or before the check-in date");
         error.statusCode = 400; 
         throw error;
     }

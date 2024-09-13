@@ -1,5 +1,6 @@
 const { validateNumberOfGuests } = require("../../../utils/checkGuests");
 const { calculateBookingPrice } = require("../../../utils/calculatePrice");
+const { checkDate } = require("../../../utils/validateDate");
 
 //Util-funktion som uppdaterar gäster/pris i en bokning
 async function updateExistingRoom(
@@ -30,11 +31,17 @@ async function updateExistingRoom(
 
   //Updaterar endast ifyllda fält 
   if (checkInDate !== undefined) {
+    checkDate(checkInDate, existingRoom.checkOutDate);
     existingRoom.checkInDate = checkInDate;
   }
 
   if (checkOutDate !== undefined) {
+    checkDate(existingRoom.checkInDate, checkOutDate);
     existingRoom.checkOutDate = checkOutDate;
+  }
+
+  if (checkInDate !== undefined && checkOutDate !== undefined) {
+    checkDate(checkInDate, checkOutDate);
   }
 
   if (roomType !== undefined) {
