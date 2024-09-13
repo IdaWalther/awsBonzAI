@@ -2,6 +2,7 @@ const { findAvailableRoom } = require("../../../utils/findRoom");
 const { validateNumberOfGuests } = require("../../../utils/checkGuests");
 const { calculateBookingPrice } = require("../../../utils/calculatePrice");
 const { toggleAvailability } = require("../../../utils/toggleAvailability");
+const { checkDate } = require("../../../utils/validateDate");
 
 //Util-funktion som lägger till rum i bokning
 async function addNewRoom(
@@ -11,6 +12,8 @@ async function addNewRoom(
   checkOutDate,
   updatedBookings
 ) {
+  // Kontrollera att checkInDate och checkOutDate är i korrekt format
+  checkDate(checkInDate, checkOutDate);
   // Kontroll av nödvändiga fält
   if (!roomType || !numberOfGuests || !checkInDate || !checkOutDate) {
     throw {
