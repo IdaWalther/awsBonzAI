@@ -3,7 +3,6 @@ const { sendResponse, sendError } = require("../../responses/index");
 const { deleteRoomFromBooking } = require("./utils/deleteRoomFromBooking");
 const { updateExistingRoom } = require("./utils/updateExistingRoom");
 const { addNewRoom } = require("./utils/addNewRoom");
-const { checkDate } = require("../../utils/validateDate");
 
 exports.handler = async (event) => {
   console.log("Received Event:", JSON.stringify(event, null, 2));
@@ -54,9 +53,6 @@ exports.handler = async (event) => {
       console.log("Processing booking:", updatedBooking);
 
       try {
-        // Kontrollera att checkInDate och checkOutDate är i korrekt format
-        checkDate(checkInDate, checkOutDate);
-
         // Ta bort rum om "deleteRoom" är satt och rumsuppgifter finns
         if (deleteRoom && roomId && roomType) {
           console.log("Deleting room with ID:", roomId);
