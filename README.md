@@ -1,69 +1,159 @@
-<!--
-title: 'AWS Simple HTTP Endpoint example in NodeJS'
-description: 'This template demonstrates how to make a simple HTTP API with Node.js running on AWS Lambda and API Gateway using the Serverless Framework.'
-layout: Doc
-framework: v4
-platform: AWS
-language: nodeJS
-authorLink: 'https://github.com/serverless'
-authorName: 'Serverless, Inc.'
-authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
--->
+# API Documentation - awsBonzai
 
-# Serverless Framework Node HTTP API on AWS
 
-This template demonstrates how to make a simple HTTP API with Node.js running on AWS Lambda and API Gateway using the Serverless Framework.
+Målet att skapa en applikation med funktioner som gör det möjligt att se alla tillgängliga rum, boka rum, se beställning som receptionist, ta bort hela order, ändra beställning samt uppdatera, hämta specifik beställning.
 
-This template does not include any kind of persistence (database). For more advanced examples, check out the [serverless/examples repository](https://github.com/serverless/examples/) which includes Typescript, Mongo, DynamoDB and other examples.
+---
 
-## Usage
+## Get all rooms (GET)  
+ *Att hämta en lista över alla tillgängliga rum.*
 
-### Deployment
+  http://INVOKE-URL/rooms
 
-In order to deploy the example, you need to run the following command:
+  Detta **API-endpoint** returnerar en lista över alla rum som för närvarande är tillgängliga i systemet. Du får en översikt över rumstyper, deras tillgänglighet och andra relevanta detaljer.
 
-```
-serverless deploy
-```
+---
 
-After running deploy, you should see output similar to:
+## Book room (POST)  
+ *Att boka ett eller flera rum.*
 
-```
-Deploying "serverless-http-api" to stage "dev" (us-east-1)
+    http://INVOKE-URL/rooms
 
-✔ Service deployed to stack serverless-http-api-dev (91s)
+### Request Body (JSON)
+  ```JSON
+  {
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "bookings": [
+    {
+      "roomType": "singleroom",
+      "numberOfGuests": 1,
+      "checkInDate": "2024-10-01",
+      "checkOutDate": "2024-10-05"
+    },
 
-endpoint: GET - https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/
-functions:
-  hello: serverless-http-api-dev-hello (1.6 kB)
-```
+    {
+      "roomType": "singleroom",
+      "numberOfGuests": 1,
+      "checkInDate": "2024-10-01",
+      "checkOutDate": "2024-10-05"
+    }
+    
+  ]
+  }
+  ```
 
-_Note_: In current form, after deployment, your API is public and can be invoked by anyone. For production deployments, you might want to configure an authorizer. For details on how to do that, refer to [HTTP API (API Gateway V2) event docs](https://www.serverless.com/framework/docs/providers/aws/events/http-api).
+---
 
-### Invocation
+## Get specific order (GET) 
+*Ange orderns ID för att hämta en specifik beställning.*
 
-After successful deployment, you can call the created application via HTTP:
+http://INVOKE-URL/orders/:id
 
-```
-curl https://xxxxxxx.execute-api.us-east-1.amazonaws.com/
-```
+Detta **API-endpoint** används för att hämta detaljerna för en specifik beställning. Du behöver ange **orderns ID** som en del av URL:en för att få information om den valda beställningen.
 
-Which should result in response similar to:
+---
+
+## Get all orders as an admin (GET) 
+*Använd för att hämta alla beställningar.*
+
+http://INVOKE-URL/orders/admin
+
+Detta **API-endpoint** används för att hämta en lista över alla beställningar i systemet. Denna funktion är avsedd för administratörer som behöver se en översikt över alla aktiva beställningar.
+
+---
+
+## Delete an order (DELETE) 
+*Ta bort en beställning med orderns ID.*
+
+http://INVOKE-URL/orders/:id
+
+Anropet används för att ta bort ett order från en specifik beställning. Det skickas som en DELETE-förfrågan och kräver att ett giltigt beställnings-**ID** (:id) inkluderas i URL.
+
+**OBS!** Ersätt med beställningens **faktiska 'PK**'.
+Vid **lyckad** borttagning returneras följande meddelande:
 
 ```json
-{ "message": "Go Serverless v4! Your function executed successfully!" }
+{
+  "data": {
+    "success": true,
+    "message": "Order cancelled successfully"
+  }
+}
+
 ```
 
-### Local development
+Om ett **felaktigt PK** skickas, returneras ett felmeddelande, som indikerar att beställningen inte hittades:
 
-The easiest way to develop and test your function is to use the `dev` command:
+
+```json
+{
+  "success": false,
+  "data": {
+    "success": false,
+    "message": "Order not found"
+  }
+}
 
 ```
-serverless dev
+
+---
+
+ ## Update an order (PUT) 
+ *Uppdatera en beställning genom att ange ID. Du kan lägga till eller ta bort rum.*
+
+http://INVOKE-URL/orders/:id
+
+
+Använd PK för ordern som path parameter.  
+
+För att ta bort ett rum från order, fyll i roomId, roomType samt sätt "delete" till true.
+
+```JSON
+{
+  "bookings": [
+    {
+     "delete": true,                    
+     "roomId": "1",
+     "roomType": "singleroom"
+    }             
+  ]
+}
+```
+ 
+För att **uppdatera ett eller flera befintliga rum** i orden följ mallen under. Ange **roomId** samt **roomType** för att specifiera vilket rum som ska uppdateras. Resterande attribut är valfria.  
+
+"**name**" och "**email**" är valfritt och behöver inte anges om man inte vill uppdatera dom i ordern.
+
+```JSON
+{
+    "name": "NAMN",
+    "email": "EMAIL@EMAIL.COM",
+    "bookings": [
+        {
+            "numberOfGuests": 1,
+            "checkOutDate": "2024-10-02",
+            "checkInDate": "2024-10-01",
+            "roomId": "1",
+            "roomType": "singleroom"
+        }
+    ]
+}
 ```
 
-This will start a local emulator of AWS Lambda and tunnel your requests to and from AWS Lambda, allowing you to interact with your function as if it were running in the cloud.
+För att **lägga till ett rum** i ordern, ange endast **roomType**, samt **numberOfGuests**, **checkInDate** och **checkOutDate**. Den kommer automatiskt känna av att rum id saknas och då lägga till ett nytt rum i ordern om ett rum i den typen finns ledig.
 
-Now you can invoke the function as before, but this time the function will be executed locally. Now you can develop your function locally, invoke it, and see the results immediately without having to re-deploy.
+```JSON
+{
+    "bookings": [
+        {
+            "numberOfGuests": 1,
+            "checkOutDate": "2024-10-02",
+            "checkInDate": "2024-10-01",
+            "roomType": "singleroom"
+        }
+    ]
+}
+```
 
-When you are done developing, don't forget to run `serverless deploy` to deploy the function to the cloud.
+Logiken för att uppdatera order loopar genom "bookings" arrayen, så det går att utföra flera olika operationer i samma request. 
