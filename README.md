@@ -59,6 +59,8 @@ Detta **API-endpoint** används för att hämta detaljerna för en specifik best
 
 http://INVOKE-URL/orders/admin
 
+Detta **API-endpoint** används för att hämta en lista över alla beställningar i systemet. Denna funktion är avsedd för administratörer som behöver se en översikt över alla aktiva beställningar.
+
 ---
 
 ## Delete an order (DELETE) 
