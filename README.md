@@ -1,10 +1,21 @@
+# API Documentation - awsBonzai
+---
 
+Målet att skapa en applikation med funktioner som gör det möjligt att se alla tillgängliga rum, boka rum, se beställning som receptionist, ta bort hela order, ändra beställning samt uppdatera, hämta specifik beställning.
 
- **Get all rooms (GET)**  
-  *http://INVOKE-URL/rooms*
+---
 
- **Book room (POST)**  
-  *http://INVOKE-URL/rooms*
+## Get all rooms (GET)  
+
+ http://INVOKE-URL/rooms
+ Att hämta en lista över alla tillgängliga rum. 
+
+---
+
+## Book room (POST)  
+  http://INVOKE-URL/rooms
+  Att boka ett eller flera rum.
+
   ```JSON
   {
   "name": "John Doe",
@@ -28,17 +39,31 @@
   }
   ```
 
-  **Get specific order (GET)**  
-*http://INVOKE-URL/orders/:id*
+---
 
-  **Get all orders as an admin (GET)**  
-*http://INVOKE-URL/orders/admin*
+## Get specific order (GET) 
 
-  **Delete an order (DELETE)**  
-*http://INVOKE-URL/orders/:id*
+http://INVOKE-URL/orders/:id
+Ange orderns ID för att hämta en specifik beställning.
+
+---
+
+## Get all orders as an admin (GET) 
+
+http://INVOKE-URL/orders/admin
+Använd för att hämta alla beställningar.
+
+---
+
+## Delete an order (DELETE) 
+
+http://INVOKE-URL/orders/:id
+Ta bort en beställning med orderns ID.
+
 Anropet används för att ta bort ett order från en specifik beställning. Det skickas som en DELETE-förfrågan och kräver att ett giltigt beställnings-**ID** (:id) inkluderas i URL.
- OBS! Ersätt med beställningens faktiska '**PK**'.
+ *OBS!* Ersätt med beställningens faktiska '**PK**'.
 Vid *lyckad* borttagning returneras följande meddelande:
+
 ```json
 {
   "data": {
@@ -46,7 +71,10 @@ Vid *lyckad* borttagning returneras följande meddelande:
     "message": "Order cancelled successfully"
   }
 }
+```
+
 Om ett *felaktigt PK* skickas, returneras ett felmeddelande, som indikerar att beställningen inte hittades:
+
 ```json
 {
   "success": false,
@@ -55,13 +83,18 @@ Om ett *felaktigt PK* skickas, returneras ett felmeddelande, som indikerar att b
     "message": "Order not found"
   }
 }
+```
 
+---
 
-  **Update an order (PUT)**  
-*http://INVOKE-URL/orders/:id*  
+ ## Update an order (PUT) 
+http://INVOKE-URL/orders/:id
+Uppdatera en beställning genom att ange ID. Du kan lägga till eller ta bort rum.
+
 Använd PK för ordern som path parameter.  
 
 För att ta bort ett rum från order, fyll i roomId, roomType samt sätt "delete" till true.
+
 ```JSON
 {
   "bookings": [
@@ -77,6 +110,7 @@ För att ta bort ett rum från order, fyll i roomId, roomType samt sätt "delete
 För att uppdatera ett eller flera befintliga rum i orden följ mallen under. Ange roomId samt roomType för att specifiera vilket rum som ska uppdateras. Resterande attribut är valfria.  
 
 "name" och "email" är valfritt och behöver inte anges om man inte vill uppdatera dom i ordern.
+
 ```JSON
 {
     "name": "NAMN",
@@ -94,6 +128,7 @@ För att uppdatera ett eller flera befintliga rum i orden följ mallen under. An
 ```
 
 För att lägga till ett rum i ordern, ange endast roomType, samt numberOfGuests, checkInDate och checkOutDate. Den kommer automatiskt känna av att rum id saknas och då lägga till ett nytt rum i ordern om ett rum i den typen finns ledig.
+
 ```JSON
 {
     "bookings": [
